@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build:
       context: ./backend
@@ -10,8 +22,11 @@ services:
       - "4000:4000"
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgresql://user:password@db:5432/myapp
     volumes:
       - ./backend:/app
+    depends_on:
+      - db
     command: npm run dev
 
   frontend:
@@ -28,3 +43,6 @@ services:
     depends_on:
       - backend
     command: npm run dev
+
+volumes:
+  postgres_data:
