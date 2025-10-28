@@ -1,61 +1,86 @@
-import express from "express";
-import { Pool } from "pg";
+import express from 'express';
+import { PrismaClient } from './generated/prisma/client';
+import dotenv from 'dotenv';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import { authMiddleware } from './middleware/authMiddleware';
+import { generateToken } from './utils/jwt';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const prisma = new PrismaClient();
 
+// Middleware
+app.use(helmet());
+app.use(cors({ origin: process.env.CORS_ORIGIN }));
+app.use(morgan('dev'));
 app.use(express.json());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
-app.get("/api/message", (req, res) => {
-  res.json({ message: "Hello from backend!" });
+app.get('/api/message', (req, res) => {
+  res.json({ message: 'Hello from backend! Updated!' });
 });
 
-// Simple database endpoint to test connection
-app.get("/api/users", async (req, res) => {
+// Login endpoint to generate JWT
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const result = await pool.query("SELECT * FROM users");
-    res.json(result.rows);
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.password !== password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    const token = generateToken({ userId: user.id, role: user.role });
+    res.json({ token });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Database error" });
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 
-// Create users table if it doesn't exist
-app.post("/api/init-db", async (req, res) => {
+// Protected route
+app.get('/api/protected', authMiddleware, (req, res) => {
+  res.json({ message: 'This is a protected route', user: req.user });
+});
+
+// Simple database endpoint to test connection
+app.get('/api/users', async (req, res) => {
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    res.json({ message: "Database initialized" });
+    const users = await prisma.user.findMany();
+    res.json(users);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to initialize database" });
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Create users table if it doesn't exist (now handled by Prisma migration)
+app.post('/api/init-db', async (req, res) => {
+  try {
+    // Migration already created the table, just return success
+    res.json({ message: 'Database initialized' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to initialize database' });
   }
 });
 
 // Create a new user
-app.post("/api/users", async (req, res) => {
-  const { name, email } = req.body;
+app.post('/api/users', async (req, res) => {
+  const { name, email, password } = req.body;
   try {
-    const result = await pool.query(
-      "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *",
-      [name, email]
-    );
-    res.json(result.rows[0]);
+    const user = await prisma.user.create({
+      data: { name, email, password },
+    });
+    res.json(user);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to create user" });
+    res.status(500).json({ error: 'Failed to create user' });
   }
 });
 
