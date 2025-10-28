@@ -1,25 +1,27 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 interface User {
   id: number;
   name: string;
   email: string;
-  created_at: string;
+  password: string;
+  role: string;
+  createdAt: string;
 }
 
 export default function Home() {
-  const [message, setMessage] = useState("Loading...");
+  const [message, setMessage] = useState('Loading...');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch backend message
-    fetch("/api/message")
+    fetch('/api/message')
       .then((res) => res.json())
       .then((data) => setMessage(data.message))
-      .catch(() => setMessage("Error fetching message"));
+      .catch(() => setMessage('Error fetching message'));
 
     // Fetch users
     fetchUsers();
@@ -27,11 +29,11 @@ export default function Home() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch('/api/users');
       const data = await res.json();
       setUsers(data);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
@@ -40,13 +42,13 @@ export default function Home() {
   return (
     <main
       style={{
-        fontFamily: "sans-serif",
-        textAlign: "center",
-        marginTop: "50px",
-        maxWidth: "800px",
-        marginLeft: "auto",
-        marginRight: "auto",
-        padding: "20px",
+        fontFamily: 'sans-serif',
+        textAlign: 'center',
+        marginTop: '50px',
+        maxWidth: '800px',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        padding: '20px',
       }}
     >
       <h1>Fullstack App Demo</h1>
@@ -58,20 +60,21 @@ export default function Home() {
       ) : users.length === 0 ? (
         <p>No users found</p>
       ) : (
-        <div style={{ textAlign: "left", display: "inline-block" }}>
+        <div style={{ textAlign: 'left', display: 'inline-block' }}>
           {users.map((user) => (
             <div
               key={user.id}
               style={{
-                border: "1px solid #ccc",
-                padding: "10px",
-                margin: "10px 0",
-                borderRadius: "5px",
+                border: '1px solid #ccc',
+                padding: '10px',
+                margin: '10px 0',
+                borderRadius: '5px',
               }}
             >
               <h3>{user.name}</h3>
               <p>Email: {user.email}</p>
-              <p>Created: {new Date(user.created_at).toLocaleDateString()}</p>
+              <p>Role: {user.role}</p>
+              <p>Created: {new Date(user.createdAt).toLocaleDateString()}</p>
             </div>
           ))}
         </div>

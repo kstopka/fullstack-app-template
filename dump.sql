@@ -30,6 +30,8 @@ CREATE TABLE public."User" (
     id integer NOT NULL,
     name text NOT NULL,
     email text NOT NULL,
+    password text NOT NULL,
+    role text DEFAULT 'user'::text NOT NULL,
     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -69,9 +71,9 @@ ALTER TABLE ONLY public."User" ALTER COLUMN id SET DEFAULT nextval('public."User
 -- Data for Name: User; Type: TABLE DATA; Schema: public; Owner: user
 --
 
-COPY public."User" (id, name, email, "createdAt") FROM stdin;
-1	John Doe	john@example.com	2025-10-28 19:35:27.047
-2	Jane Smith	jane@example.com	2025-10-28 19:35:41.817
+COPY public."User" (id, name, email, password, role, "createdAt") FROM stdin;
+1	John Doe	john@example.com	password123	user	2025-10-28 19:35:27.047
+2	Jane Smith	jane@example.com	password456	user	2025-10-28 19:35:41.817
 \.
 
 

@@ -61,7 +61,7 @@ Jeśli używasz Prisma bez migracji plików:
 cd backend && npx prisma db push
 ```
 
-**Uwaga:** `db push` nadpisze strukturę tabel w bazie danych zgodnie ze schematem. Użyj z ostrożnością w środowisku produkcyjnym.
+**Uwaga:** `db push` nadpisze strukturę tabel w bazie danych zgodnie ze schematem. Jeśli istnieją dane, które zostaną utracone, użyj flagi `--accept-data-loss`. Użyj z ostrożnością w środowisku produkcyjnym.
 
 ### Jeśli używasz migracji (opcjonalnie)
 
